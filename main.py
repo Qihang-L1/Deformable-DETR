@@ -22,7 +22,7 @@ import datasets
 import util.misc as utils
 import datasets.samplers as samplers
 from datasets import build_dataset, build_carla_dataset, get_coco_api_from_dataset
-from engine import evaluate, train_one_epoch, testcarla
+from engine import evaluate, train_one_epoch, carla_inf, carla_vis
 from models import build_model
 
 
@@ -177,11 +177,12 @@ def get_args_parser():
 
     # dataset parameters
     parser.add_argument("--dataset_file", default="coco")
-    parser.add_argument("--test_dataset_file", default="carla")  # new
+    parser.add_argument("--test_dataset_file", default="carla")
     parser.add_argument("--coco_path", default="./data/coco", type=str)
     parser.add_argument("--coco_panoptic_path", type=str)
-    parser.add_argument("--carla_path", default="./data/carla", type=str)  # new
+    parser.add_argument("--carla_path", default="./data/carla", type=str)
     parser.add_argument("--remove_difficult", action="store_true")
+    parser.add_argument("--threshold", default=0.4)
 
     parser.add_argument(
         "--output_dir",
@@ -421,7 +422,10 @@ def main(args):
         return
 
     if args.test:
-        testcarla(model, postprocessors, data_loader_test, device)
+        Pred_dict, Labels, Image_path, Index = carla_inf(
+            model, postprocessors, data_loader_test, device, args
+        )
+        carla_vis(Pred_dict, Labels, Image_path, Index)
 
     if args.train:
         print("Start training")

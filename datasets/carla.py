@@ -3,24 +3,36 @@ from pathlib import Path
 from PIL import Image
 import torch
 import torch.utils.data
-from torchvision import transforms
 from torchvision.datasets.vision import VisionDataset
-import datasets.transforms as T
+import datasets.transforms as transforms
+import numpy as np
 
 
 class Carla_Dataset(VisionDataset):
+    """
+    A dataset class for the Carla Dataset.
+
+    Args:
+        root (string): Root directory of the Carla Dataset.
+        transforms (callable, optional): A function/transform that takes in a PIL image
+            and returns a transformed version. E.g, ``transforms.RandomCrop``
+    """
+
     def __init__(self, root, transforms):
         super(Carla_Dataset, self).__init__(root, transforms)
         self.img_names = os.listdir(root)
         self._transforms = transforms
 
     def __getitem__(self, index):
-        # regiter images in a list
-        # read_img_folder, pil.imread("xxx") -> list
-        # img_list = []
+        """
+        Retrieves the image and target annotation at the given index.
 
-        # read json folder, import json, json.read("xxx"), write a pseudo function to return fake anno
-        # anno_lits = get_anno()
+        Args:
+            index (int): Index of the image and target annotation to retrieve.
+
+        Returns:
+            tuple: A tuple containing the image and target annotation.
+        """
         img_path = os.path.join(self.root, self.img_names[index])
         img = Image.open(img_path).convert("RGB")
         tgt = self.get_anno()
@@ -29,13 +41,24 @@ class Carla_Dataset(VisionDataset):
         return img, tgt
 
     def __len__(self):
+        """
+        Returns the total number of images in the dataset.
+
+        Returns:
+            int: The total number of images in the dataset.
+        """
         return len(self.img_names)
 
-    def get_anno(self, anno_file=None):
+    def get_anno(self):
+        """
+        Retrieves the target annotation for an image.
+
+        Returns:
+            dict: A dictionary containing the target annotation, which is now a dummy.
+            The key value "orig_size" representing original size of the image must be given correctly.
+        """
         targets = {
-            "boxes": torch.tensor(
-                [[0.5325, 0.9101, 0.2119, 0.1546], [0.2679, 0.9204, 0.2207, 0.1592]]
-            ),
+            "boxes": torch.tensor([np.random.rand(4), np.random.rand(4)]),
             "labels": torch.tensor([15, 15]),
             "image_id": torch.tensor([86835]),
             "area": torch.tensor([8161.0596, 8446.8818]),
@@ -47,13 +70,18 @@ class Carla_Dataset(VisionDataset):
 
 
 def make_carla_transforms():
-    normalize = T.Compose(
-        [T.ToTensor(), T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]
-    )
-
-    return T.Compose(
+    normalize = transforms.Compose(
         [
-            T.RandomResize([800], max_size=1333),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]
+    )
+    """ 
+    The image transformation and normalization used in test dataset are the same as the ones used in evaluation dataset.
+    """
+    return transforms.Compose(
+        [
+            transforms.RandomResize([720], max_size=1333),
             normalize,
         ]
     )

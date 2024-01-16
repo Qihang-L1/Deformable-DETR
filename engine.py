@@ -23,9 +23,7 @@ from datasets.data_prefetcher import data_prefetcher
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import torchvision.transforms as T
-import torchvision.transforms.functional as F
-from pycocotools.coco import COCO
+from PIL import Image
 
 
 def train_one_epoch(
@@ -209,46 +207,47 @@ def evaluate(
     return stats, coco_evaluator
 
 
-def testcarla(model, postprocessors, data_loader, device):
+def carla_inf(model, postprocessors, data_loader, device, args):
     dataiter = iter(data_loader)
     for index, value in enumerate(dataiter):
-        samples, targets = value
-        samples_gpu = samples.to(device)
+        samples, targets, image_path = value
+        samples = samples.to(device)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-        outputs = model(samples_gpu)
+        targets = targets.to(device)
+        outputs = model(samples)
         orig_target_sizes = torch.stack([t["orig_size"] for t in targets], dim=0)
-        orig_target_sizes = orig_target_sizes.to(device)
         results = postprocessors["bbox"](outputs, orig_target_sizes)
-        thershold = 0.4
+        Threshold = args.threshold
+        """
+        The parameter "threshold" is used to control the threshold at which probability 
+        values are converted into binary classification predictions.
+        """
         scores = results[0]["scores"]
         labels = results[0]["labels"]
         boxes = results[0]["boxes"]
-        select_mask = scores > thershold
-        os.makedirs("output_images", exist_ok=True)
+        select_mask = scores > Threshold
         pred_dict = {"boxes": boxes[select_mask]}
+        return pred_dict, labels, image_path, index
 
-        inv_normalize = T.Normalize(
-            mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225],
-            std=[1 / 0.229, 1 / 0.224, 1 / 0.225],
+
+def carla_vis(dic, lbl, pth, ind):
+    os.makedirs("output_images", exist_ok=True)
+    image = Image.open(pth[0])
+    fig, ax = plt.subplots(1)
+    ax.imshow(image)
+    for box, label in zip(dic["boxes"].cpu(), lbl.cpu()):
+        x0, y0, x1, y1 = box[0], box[1], box[2], box[3]
+        cat = Label_map(label.item())
+        rect = patches.Rectangle(
+            (x0, y0), x1 - x0, y1 - y0, linewidth=2, edgecolor="r", facecolor="none"
         )
-        original_image = inv_normalize(samples.tensors[0])
-        image = F.to_pil_image(original_image)
-
-        fig, ax = plt.subplots(1)
-        ax.imshow(image)
-        for box, label in zip(pred_dict["boxes"].cpu(), labels.cpu()):
-            x0, y0, x1, y1 = box[0], box[1], box[2], box[3]
-            cat = dictionary(label.item())
-            rect = patches.Rectangle(
-                (x0, y0), x1 - x0, y1 - y0, linewidth=2, edgecolor="r", facecolor="none"
-            )
-            ax.add_patch(rect)
-            ax.text(x0, y0, f"{cat}", color="r")
-        plt.savefig(f"output_images/image_{index}.png")
-        plt.close()
+        ax.add_patch(rect)
+        ax.text(x0, y0, f"{cat}", color="r")
+    plt.savefig(f"output_images/image_{ind}.png")
+    plt.close()
 
 
-def dictionary(number):
+def Label_map(number):
     label_map = {
         1: "person",
         2: "bicycle",
