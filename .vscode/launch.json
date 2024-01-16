@@ -1,0 +1,42 @@
+
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": 
+  [
+    {
+      "name": "main_carla_test",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "--num_feature_levels", "1",
+          "--output_dir", "./output",
+          "--resume", "./output/checkpoint.pth", 
+          "--test"
+      ]
+
+      // python main.py --with_box_refine --two_stage  --resume ./output/checkpoint.pth --test
+    },
+    
+    {
+      "name": "foo_debug_test",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/foo.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      // "args": [
+      //     "--data-path",
+      //     "input/KIDT",
+      //     "--single-vis",
+      //     "--target-sample",
+      //     "input/KIDT/20210517_182523_0tb000h_00027/sensor/camera_front_right/00000000_1621268723527242.png"
+      // ]
+    },
+  ]
+}
