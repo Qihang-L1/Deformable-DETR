@@ -5,7 +5,7 @@ import torch
 import torch.utils.data
 from torchvision.datasets.vision import VisionDataset
 import datasets.transforms as transforms
-import numpy as np
+
 
 
 class Carla_Dataset(VisionDataset):
@@ -38,7 +38,7 @@ class Carla_Dataset(VisionDataset):
         tgt = self.get_anno()
         if self._transforms is not None:
             img, tgt = self._transforms(img, tgt)
-        return img, tgt
+        return img, tgt, img_path
 
     def __len__(self):
         """
@@ -58,13 +58,7 @@ class Carla_Dataset(VisionDataset):
             The key value "orig_size" representing original size of the image must be given correctly.
         """
         targets = {
-            "boxes": torch.tensor([np.random.rand(4), np.random.rand(4)]),
-            "labels": torch.tensor([15, 15]),
-            "image_id": torch.tensor([86835]),
-            "area": torch.tensor([8161.0596, 8446.8818]),
-            "iscrowd": torch.tensor([0, 0]),
             "orig_size": torch.tensor([720, 1280]),
-            "size": torch.tensor([512, 767]),
         }
         return targets
 

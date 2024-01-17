@@ -180,7 +180,7 @@ def get_args_parser():
     parser.add_argument("--test_dataset_file", default="carla")
     parser.add_argument("--coco_path", default="./data/coco", type=str)
     parser.add_argument("--coco_panoptic_path", type=str)
-    parser.add_argument("--carla_path", default="./data/carla", type=str)
+    parser.add_argument("--carla_path", default="./data/carla/pedestrian", type=str)
     parser.add_argument("--remove_difficult", action="store_true")
     parser.add_argument("--threshold", default=0.4)
 
@@ -422,10 +422,7 @@ def main(args):
         return
 
     if args.test:
-        Pred_dict, Labels, Image_path, Index = carla_inf(
-            model, postprocessors, data_loader_test, device, args
-        )
-        carla_vis(Pred_dict, Labels, Image_path, Index)
+        carla_inf(model, postprocessors, data_loader_test, device, args)
 
     if args.train:
         print("Start training")
